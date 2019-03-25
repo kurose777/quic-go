@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"unsafe"
 
 	"github.com/lucas-clemente/quic-go/internal/protocol"
 	"github.com/lucas-clemente/quic-go/internal/qerr"
@@ -541,13 +542,9 @@ func (h *cryptoSetup) GetOpener(level protocol.EncryptionLevel) (Opener, error) 
 	}
 }
 
-func (h *cryptoSetup) ConnectionState() ConnectionState {
-	connState := h.conn.ConnectionState()
-	return ConnectionState{
-		HandshakeComplete: connState.HandshakeComplete,
-		ServerName:        connState.ServerName,
-		PeerCertificates:  connState.PeerCertificates,
-	}
+func (h *cryptoSetup) ConnectionState() tls.ConnectionState {
+	cs := h.conn.ConnectionState()
+	return *(*tls.ConnectionState)(unsafe.Pointer(&cs))
 }
 
 func (h *cryptoSetup) tlsConfigToQtlsConfig(c *tls.Config) *qtls.Config {
